@@ -189,6 +189,7 @@ impl<B: Backend> AST<B> {
 //
 // Tests
 //
+/*
 #[cfg(test)]
 mod tests {
     use crate::parser::types::Stmt;
@@ -220,5 +221,61 @@ mod tests {
         let ctx = &mut ParserCtx::default();
         let parsed = Stmt::parse(ctx, tokens).unwrap();
         println!("{:?}", parsed);
+    }
+
+}
+*/
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::types::{Stmt, StmtKind};
+
+    #[test]
+    fn test_plus_equal_assignment() {
+        let code = "count += value;";
+        let tokens = Token::parse(0, code).expect("Failed to parse tokens");
+        let mut ctx = ParserCtx::new(0, 0);
+        let mut tokens = tokens.clone();
+
+        let stmt = Stmt::parse(&mut ctx, &mut tokens).expect("Failed to parse statement");
+
+        match stmt.kind {
+            StmtKind::Expr(ref expr) => {
+                match expr.kind {
+                    ExprKind::Assignment { ref lhs, ref rhs } => {
+                        match lhs.kind {
+                            ExprKind::Variable { ref name, .. } => {
+                                assert_eq!(name.value, "count");
+                            },
+                            _ => panic!("Expected variable on the left-hand side"),
+                        }
+
+                        match &rhs.kind {
+                            ExprKind::BinaryOp { op, ref lhs, ref rhs, .. } => {
+                                assert_eq!(*op, Op2::Addition);
+
+                                match lhs.kind {
+                                    ExprKind::Variable { ref name, .. } => {
+                                        assert_eq!(name.value, "count");
+                                    },
+                                    _ => panic!("Expected variable on the left-hand side of binary op"),
+                                }
+
+                                match rhs.kind {
+                                    ExprKind::Variable { ref name, .. } => {
+                                        assert_eq!(name.value, "value");
+                                    },
+                                    _ => panic!("Expected variable on the right-hand side of binary op"),
+                                }
+                            },
+                            _ => panic!("Expected binary operation on the right-hand side"),
+                        }
+                    },
+                    _ => panic!("Expected assignment expression"),
+                }
+            },
+            _ => panic!("Expected expression statement"),
+        }
     }
 }

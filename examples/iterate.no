@@ -20,6 +20,7 @@ fn House.windows(house: House) -> Field {
     for room in house.rooms {
         // ideally: windows +=
         windows_count = windows_count + room.windows();
+        // windows_count += room.windows();
     }
 
     return windows_count;

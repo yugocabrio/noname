@@ -11,7 +11,7 @@ use crate::{
     parser::{types::Ident, ParserCtx},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tokens {
     pub peeked: Option<Token>,
     inner: IntoIter<Token>,

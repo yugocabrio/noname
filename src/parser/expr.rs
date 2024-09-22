@@ -123,7 +123,7 @@ pub enum ExprKind {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Op2 {
     Addition,
     Subtraction,
