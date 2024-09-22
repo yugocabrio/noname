@@ -396,6 +396,51 @@ impl Expr {
         // the expression `self` we just parsed.
         // warning: ALL of the rules here should make use of `self`.
         let lhs = match tokens.peek() {
+
+            // PlusEqual
+            Some(Token {
+                kind: TokenKind::PlusEqual,
+                span,
+            }) => {
+                tokens.bump(ctx);
+    
+                if !matches!(
+                    &self.kind,
+                    ExprKind::Variable { .. }
+                        | ExprKind::ArrayAccess { .. }
+                        | ExprKind::FieldAccess { .. },
+                ) {
+                    return Err(ctx.error(
+                        ErrorKind::InvalidAssignmentExpression,
+                        self.span.merge_with(span),
+                    ));
+                }
+    
+                let rhs = Expr::parse(ctx, tokens)?;
+                let span = self.span.merge_with(rhs.span);
+    
+                // Convert 'lhs += rhs' into 'lhs = lhs + rhs'
+                let new_rhs = Expr::new(
+                    ctx,
+                    ExprKind::BinaryOp {
+                        op: Op2::Addition,
+                        lhs: Box::new(self.clone()),
+                        rhs: Box::new(rhs),
+                        protected: false,
+                    },
+                    span,
+                );
+    
+                Expr::new(
+                    ctx,
+                    ExprKind::Assignment {
+                        lhs: Box::new(self),
+                        rhs: Box::new(new_rhs),
+                    },
+                    span,
+                )
+            }
+
             // assignment
             Some(Token {
                 kind: TokenKind::Equal,
